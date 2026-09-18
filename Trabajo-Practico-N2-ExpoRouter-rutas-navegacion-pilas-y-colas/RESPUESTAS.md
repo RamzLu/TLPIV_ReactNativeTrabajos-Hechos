@@ -93,24 +93,54 @@ pregunta si la pila esta vacia, pero todavia tiene `'Inicio'` y `'Productos'` as
 - `console.log(c.frente());`
 
   pregunta quien esta al frente: `'Beto'`
+
 - `console.log(c.desencolar());`
 
   se atiende y se saca de la fila al primero (beto) y lo muestra en consola: `'Beto'`
 
   la cola queda como `['Caro', 'Dani']`
+
 - `console.log(c.vacia);`
 
   pregunta si la fila esta vacia, y da `false`porque caro y dani estan ahi
+
+## **A4. Análisis de la implementación**
+
+*a) En las clases de clase, el array se declara como #items. ¿Qué significa el # y qué problema evita?*
+
+1. <span style="color: rgb(74, 158, 232);">respuesta: </span>el simbolo # significa que la variable o campo es **estrictamente privada**, el problema que evita es que alguien manipule los datos desde afuera sin respetar las reglas, por ejemplo si no tuviera el # otra érsona podria escribir pila.items.push("tonto jaja") y meter cosas donde no debe, al ser privada la unica forma de hacerlo es usando metodos que como creadora le deje usar ya que estos tendrian controles, garantizando que el dato vaya exactamente donde debe ir según las reglas
+
+b) La cola usa `array.shift()` para desencolar. ¿Qué problema de rendimiento tiene con colas muy grandes? ¿Cómo lo resuelven las colas "serias"?
+
+1. respuesta: el problema de shift() es que saca al primero de la fila y tiene que mover todos los elementos un lugar adelante para rellenar el hueco, si tuvieramos 999.999 datos y tuvieran que moverse uno por uno consumiria mucha memoria y pondria lenta a la app
+2. Las colas serias resuelven esto usando una variable extra (por ejemplo `#frenteIndex = 0`), donde se lee su valor, se limpia esa posicion  (`null `o `undefined`) y se incrementa `#frenteIndex` en 1
 
 <span style="color: rgb(229, 87, 87);">NOTAS</span>:
 
 - Una <u>pila </u>(o stack) es una estructura donde los elementos se colocan uno encima de otro, como una **pila de platos** \
   **Regla:** Solo puedes interactuar con el elemento que está arriba del todo.
+
   - **Mecanismo (LIFO):** El último elemento que guardas es el primero que vas a sacar.
   - **Operaciones básicas:** `Push` (agregar un elemento arriba) y `Pop` (quitar el elemento de arriba).
   - **Ejemplo real:** El botón **"Deshacer" (Ctrl + Z)** de cualquier programa. El software guarda tus últimas acciones en una pila; al presionar el botón, revierte la última acción que hiciste.
+
 - Una <u>cola</u> (o Queue) es una estructura donde los elementos se colocan uno detrás de otro, como una **fila en el supermercado**.
+
   - **Regla:** Los nuevos elementos se suman al final de la fila, y se procesan por el principio.
   - **Mecanismo (FIFO):** El primer elemento que llega es el primero en ser atendido y salir.
   - **Operaciones básicas:** `Enqueue` (agregar al final) y `Dequeue` (sacar al primero de la fila).
   - **Ejemplo real:** Una **cola de impresión**. Si mandas tres documentos a imprimir, la impresora los procesará en el estricto orden en que llegaron.
+
+Ejemplo de `#frenteIndex`como si fuera una lista en una hoja de papel
+
+```
+#items: T[] = []; //hoja de papel en blanco.
+#frenteIndex: number = 0; //Este es el dedo, empezando en el renglón 0
+
+desencolar(): T | undefined {
+if (this.vacia) return undefined;
+// 1. Leemos qué dice exactamente en el renglón donde está el dedo
+const elemento = this.#items[this.#frenteIndex]; // 2. Bajamos el dedo al siguiente renglón (le sumamos 1)
+this.#frenteIndex++; // 3. Entregamos el elemento que leímos en el paso 1 return elemento;
+}
+```
