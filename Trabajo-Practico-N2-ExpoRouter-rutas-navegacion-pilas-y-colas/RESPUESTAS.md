@@ -1,16 +1,16 @@
 ## **A1. Conceptos:**
 
-*a) ¿Qué significan LIFO y FIFO? ¿Cuál corresponde a la pila y cuál a la cola?*
+***a) ¿Qué significan LIFO y FIFO? ¿Cuál corresponde a la pila y cuál a la cola?***
 
 - **FIFO** significa **"First In, First Out",** esto en español significa "El primero que entra, es el primero en salir" y corresponde a una cola
 - **LIFO (Last In, First Out):** En español significa "El último que entra, es el primero en salir". Esto corresponde a una **Pila**
 
-*b)* *¿Por qué extremo entra y por qué extremo sale un elemento en cada estructura?*
+***b)* *¿Por qué extremo entra y por qué extremo sale un elemento en cada estructura?***
 
 - **La Cola:** Los elementos entran por un lado (el final o la parte de atrás) y salen por el extremo opuesto (el frente). Como un tubo donde metes bolitas por un lado y salen por el otro.
 - **La Pila:** Los elementos entran y salen exactamente por el *mismo* lugar. Ese único lugar de acceso se llama tope (o la parte de arriba).
 
-*c) Ejemplos de la vida real y de aplicaciones móviles*
+***c) Ejemplos de la vida real y de aplicaciones móviles***
 
 1. *FIFO (o cola):*
 
@@ -106,14 +106,89 @@ pregunta si la pila esta vacia, pero todavia tiene `'Inicio'` y `'Productos'` as
 
 ## **A4. Análisis de la implementación**
 
-*a) En las clases de clase, el array se declara como #items. ¿Qué significa el # y qué problema evita?*
+***a) En las clases de clase, el array se declara como #items. ¿Qué significa el # y qué problema evita?***
 
-1. <span style="color: rgb(74, 158, 232);">respuesta: </span>el simbolo # significa que la variable o campo es **estrictamente privada**, el problema que evita es que alguien manipule los datos desde afuera sin respetar las reglas, por ejemplo si no tuviera el # otra érsona podria escribir pila.items.push("tonto jaja") y meter cosas donde no debe, al ser privada la unica forma de hacerlo es usando metodos que como creadora le deje usar ya que estos tendrian controles, garantizando que el dato vaya exactamente donde debe ir según las reglas
+1. <span style="color: rgb(74, 158, 232);">respuesta: </span>el simbolo # significa que la variable o campo es **estrictamente privada**, el problema que evita es que alguien manipule los datos desde afuera sin respetar las reglas, por ejemplo si no tuviera el # otra pérsona podria escribir pila.items.push("tonto jaja") y meter cosas donde no debe, al ser privada la unica forma de hacerlo es usando metodos que como creadora le deje usar ya que estos tendrian controles, garantizando que el dato vaya exactamente donde debe ir según las reglas
 
-b) La cola usa `array.shift()` para desencolar. ¿Qué problema de rendimiento tiene con colas muy grandes? ¿Cómo lo resuelven las colas "serias"?
+**b) La cola usa** `array.shift()` **para desencolar. ¿Qué problema de rendimiento tiene con colas muy grandes? ¿Cómo lo resuelven las colas "serias"?**
 
 1. respuesta: el problema de shift() es que saca al primero de la fila y tiene que mover todos los elementos un lugar adelante para rellenar el hueco, si tuvieramos 999.999 datos y tuvieran que moverse uno por uno consumiria mucha memoria y pondria lenta a la app
-2. Las colas serias resuelven esto usando una variable extra (por ejemplo `#frenteIndex = 0`), donde se lee su valor, se limpia esa posicion  (`null `o `undefined`) y se incrementa `#frenteIndex` en 1
+2. Las colas serias resuelven esto usando una variable extra (por ejemplo `#frenteIndex = 0`), donde se lee su valor, se limpia esa posicion (`null `o `undefined`) y se incrementa `#frenteIndex` en 1
+
+## A5. Programación: una cola eficiente
+
+mirar el archivo de ColaEficiente.js:
+
+```javascript
+class ColaEficiente {
+    #items = []; //el simbolo # significa que la lista es privada, nadie de afuera puede verla ni modificarla
+    #frenteIndex = 0; // aca se crea un numereo que arranca de 0, tambien es privada
+
+
+    encolar(x) { //hacemos un metodo que recibe un dato cualquiera (x) 
+        this.#items.push(x) //aqui lo q hace es agarrar la lista que se hizo arriba y empujar el dato que recibio encolar(x) al final del todo
+    }
+    desencolar(){ //otro metodo para sacar el primer dato de la lista
+        if (this.vacia) return undefined; //primero se fija si la lista esta vacia, y si lo esta devuelve undefined y frena la accion
+        const elemento = this.#items[this.#frenteIndex]; //aca hacemos que mire en la lista donde esta marcado nuestro #frenteIndex y guarde ese dato en la constante elemento
+        this.#frenteIndex++; //el ++ odena que si el numero valia 0 ahora vale 1, entonces avanza la posicion sin borrar nada
+        return elemento; //y finalmente entrega el dato que habiamos guardado en elemento
+    }
+
+    frente() {
+        if (this.vacia) return undefined //antes de buscar un dato verifica que la lista no este vacia
+        return this.#items[this.#frenteIndex] // si la lista no esta vacia va a la lista (this.#items) mira la posicion exacta que marca nuestro #frenteIndex y agarra el dato y lo devuelve para verlo
+    }
+
+    get vacia() { //el get seria como un sensor mas q una orden
+        return this.#frenteIndex >= this.#items.length //se hace una comparacion entre #frenteIndex contra la cantidad de cosas guardadas
+    } //por ejemplo, si guarde dos cosas en la lista, pero la posisicion ya avanzo a la dos avisa que ya recorrio todo entonces expulsa un true (que la lista SI esta vacia)
+    //o si se guardo dos cosas pero la posicion es 0, entonces 0 >= 2 = false, entonces la lista NO esta vacia
+
+    get tamanio() {
+        return this.#items.length - this.#frenteIndex //aca hace una resta matematica, agarra la cantidad de elemento que en algun momento entraron en la lista y le resta el numero de posiciones que se avanzo y devuelve la respuesta
+    }
+}
+
+
+//console logs 
+console.log("Se abrio la cocina")
+const pedidos = new ColaEficiente()
+
+console.log("Tres alumnos piden comida")
+pedidos.encolar("Hamburgesa para Stella")
+pedidos.encolar("Ensalada para Vivi")
+pedidos.encolar("Milanesa para Kiara")
+
+console.log(`Pedidos en espera: ${pedidos.tamanio}`)
+console.log(`El cocinero mira el ticker al frente: "${pedidos.frente()}"`);
+
+
+console.log("Se empieza a trabajar")
+console.log(`Sale el pedido: ${pedidos.desencolar()}`) //stella
+console.log(`Sale el pedido: ${pedidos.desencolar()}`) //Sale vivi
+
+console.log("Estado actual")
+console.log(`Pedidos restantes en espera ${pedidos.tamanio}`)
+console.log(`El cocinero mira el siguiente ticket: "${pedidos.frente()}"`)
+
+
+console.log("Sale el ultimo pedido: ",pedidos.desencolar())
+console.log("La cocina esta sin pedidos?", pedidos.vacia)
+```
+
+## A6. Pila y cola dentro de Expo Router
+
+***a) ¿Qué estructura describe el historial de pantallas de un Stack? ¿Qué pantalla es la visible y qué operación hace “atrás”?***
+
+- La estructura: esa exactamente una pila, como cartas que se van apoyando una arriba de la otra en una mesa
+- La pantalla visible: es siempre la que esta en el <u>tope</u> (la ultima que se puso arriba del todo
+- La operacion de "atras": hace exactamenta la accion de pop(), o sea, agarra la pantalla que esta arriba del todo, la saca y la descarta y deja ver la pantalla que quedo abajo
+
+***b) ¿Qué estructura usa Expo Router para las acciones de navegación? ¿Qué pasa si el usuario toca dos links muy rápido?***
+
+- La estructura: Para organizar los toques o clicks la app usa internamente una Cola
+- Si el usaurio toca dos links muy rapido: como funciona con unna fila ordenada si el usuario toca dos botones muy rapido, el app simplemente pone la primera accion enfrente de la cola y la accion justo detras, respetando el orden exacto en el que ocurrieron.
 
 <span style="color: rgb(229, 87, 87);">NOTAS</span>:
 
