@@ -190,17 +190,126 @@ console.log("La cocina esta sin pedidos?", pedidos.vacia)
 - La estructura: Para organizar los toques o clicks la app usa internamente una Cola
 - Si el usaurio toca dos links muy rapido: como funciona con unna fila ordenada si el usuario toca dos botones muy rapido, el app simplemente pone la primera accion enfrente de la cola y la accion justo detras, respetando el orden exacto en el que ocurrieron.
 
-<span style="color: rgb(229, 87, 87);">NOTAS</span>:
+# Parte B · Rutas basadas en archivos
+
+## B1. Del archivo a la URL
+
+- src/app/(tabs)/index.tsx:
+
+  URL: / la ruta raiz o pantalla de inicio (index siempre representa la ruta principal de la carpeta donde está)
+
+  por que: el (tabs) es invisible, al ser un archivo index, es la pagina por defecto de la aplicacion
+
+- src/app/acerca.tsx:
+
+  URL: /acerca
+
+  por que: es un archivo normal sin simbolos, toma exactamente el nombre del archivo para crear la ruta
+
+- src/app/(tabs)/perfil.tsx:
+
+  URL: /perfil
+
+  por que: la carpeta (tabs) es invisible para la url, asi que solo toma la palabra perfil
+
+- src/app/(tabs)/productos/index.tsx:
+
+  URL: /productos
+
+  por que: el (tabs) invisible, entra a la carpeta productos y como el archivo es index no suma palabras extra, es la pagina principal de la seccion de productos
+
+- src/app/(tabs)/productos/\[id\].tsx:
+
+  URL: /productos/1, productos/23, etc
+
+  por que: los corchetes \[\] le avisan al sistema que ahi va un dato variable, sirve para mostrar el detalle de un producto especifico dependiendo del numero que llegue en la URL
+
+- src/app/docs/\[...slug\].tsx:
+
+  URL: /docs/react, docs/react/hooks, o cualquier cosa que vaya después
+
+  por que: los tres puntos "…" dentro de los corchetes significan que atra todo, como un comodin que acepta cualquier ruta que empiece con /docs/ sin importan cuantas / haya despues
+
+- src/app/\_layout.tsx:
+
+  URL/FUNCION: no genera una pantalla visible por si sola, funciona como un marco o molde para las demás pantallas en la carpeta
+
+  por que: el \_ le indica a Expo ROuter que este archivo sirve para configurar o organizar elementos repetitivos como la cabecera, el menú de navegación, las barras laterales y el pie de página o manejar la navegación entre pantallas, permitiendo configurar componentes como pilas (`Stack`), pestañas (`Tabs`)
+
+- src/app/+not-found.tsx:
+
+  URL/FUNCION: Aparece cuando el usuario pone una url que no existe (Error 404 por ejemplo)
+
+  por que: el simbolo + indica que es una palabra reservada del sistema para manejar rutas no encontradas
+
+- src/app/Boton.tsx
+
+  URL/FUNCION: genera un problema de mala practica
+
+  por que: si es un simple boton para el diseño al estar dentro de la carpeta de app expo intenta convertirlo en pantalla y completa la url con /Boton, los componentes como estos no deben estar e app, sino en carpetas separadas como en /components/
+
+## B2. De la URL al archivo
+
+- URL: `/categorias/bebidas (y cualquier otra categoría)`
+
+  **archivo**: src/app/categorias/\[categoria\].tsx
+
+  **por que**: como la palabra bebidas puede cambiar a postres o kiosco cualquier otra cosa no se puede crear un archivo para cada una, en vez de eso se crea una carpeta con categorias y dentro se pone \[\], eso para decirle que dentro va una variable culquiera
+
+- URL: `/buscar?q=mate&categoria=kiosco`
+
+  **archivo:** src/app/buscar.tsx o src/app/buscar/index.tsx
+
+  **por que**: en internet todo lo que esta despues del signo ? son datos extra como parametros que se le envia a la pantalla, pero no formar parte de la ruta, para el sistema de archivos la url es solo /buscar, por eso se crea un archivo simple de buscar.tsx
+
+- URL: `/ayuda/pagos/tarjeta` y `/ayuda/horarios`
+
+  **archivo**: src/app/ayuda/\[...slug\].tsx
+
+  **por que**: como la url tiene dos barras (/pagos/tarjetas) y la otra solo tiene una (/horarios) la profundidad puede variar y ser infinita, un simple \[id\] no alcanza, se necesita un comodin como los … dentro (\[…\]) esto hace que atrapen todo lo que venga despues de la carpeta "ayuda" sin importar cuantas barras tenga
+
+- URL: `/ayuda (con una pantalla propia)`
+
+  **archivo**: src/app/ayuda/index.tsx
+
+  **por que**: ya tenemos una carpeta ayuda, solo creamos el archivo index.ts dentro de esa carpeta y asi representa la pantalla principal de la carpeta donde se esta guardando
+
+# B3. Verdadero o falso
+
+**a) Con Expo Router, cada pantalla nueva se debe registrar en una tabla de configuración.** <span style="color: rgb(229, 87, 87);">Flaso</span>
+
+<u>Justificacion:</u> La gran ventaja de Expo es justamente el enrutamiento basado en archivos, al crear un archivo en la carpeta de app se convierte en una ruta de la aplicacion, no se necesita ir a ningun archivo ni tabla para registrarlo
+
+b) Los archivos *layout.tsx son pantallas que el usuario puede visitar.* <span style="color: rgb(229, 87, 87);">Flaso</span>
+
+<u>Justificacion:</u> El \_ indica que es un molde o maarco que envuelve a las verdaderas pantallas, el usuario nunca navega directo al layout sino en las pantallas que estan dentro de el
+
+*c) Una carpeta entre paréntesis, como (tabs), no aparece en la URL.* <span style="color: rgb(87, 179, 91);">*Verdadero*</span>
+
+*d) Para agregar una librería conviene usar npm install, porque siempre trae la última versión.* <span style="color: rgb(229, 87, 87);">*Falso*</span>
+
+<u>Justificacion:</u> traer la ultima version trae problemas, si se hace npm install se podria bajar una libreria que no es compatible con el proyecto y se rompa, conviene usar npx expo install porque busca la version exacta que hace juego con el Expo SDK
+
+*e) En package.json, "main": "expo-router/entry" reemplaza al viejo App.tsx.* <span style="color: rgb(87, 179, 91);">*Verdadero*</span>
+
+*f) La ruta* /sitemap lista todas las rutas de la app y sirve para depurar. <span style="color: rgb(87, 179, 91);">Verdadero</span>
+
+g) Si existen docs/index.tsx y docs/\[...slug\].tsx, la URL /docs muestra docs/index.tsx. <span style="color: rgb(87, 179, 91);">Verdadero</span>
+
+h) En SDK 57, expo-router usa el mismo número de versión mayor que el SDK (57). <span style="color: rgb(87, 179, 91);">Verdadero</span>
+
+# Parte C · Navegar: , router y la pila
+
+## C1. Métodos de router
+
+## <span style="color: rgb(229, 87, 87);">NOTAS</span>:
 
 - Una <u>pila </u>(o stack) es una estructura donde los elementos se colocan uno encima de otro, como una **pila de platos** \
   **Regla:** Solo puedes interactuar con el elemento que está arriba del todo.
-
   - **Mecanismo (LIFO):** El último elemento que guardas es el primero que vas a sacar.
   - **Operaciones básicas:** `Push` (agregar un elemento arriba) y `Pop` (quitar el elemento de arriba).
   - **Ejemplo real:** El botón **"Deshacer" (Ctrl + Z)** de cualquier programa. El software guarda tus últimas acciones en una pila; al presionar el botón, revierte la última acción que hiciste.
-
 - Una <u>cola</u> (o Queue) es una estructura donde los elementos se colocan uno detrás de otro, como una **fila en el supermercado**.
-
   - **Regla:** Los nuevos elementos se suman al final de la fila, y se procesan por el principio.
   - **Mecanismo (FIFO):** El primer elemento que llega es el primero en ser atendido y salir.
   - **Operaciones básicas:** `Enqueue` (agregar al final) y `Dequeue` (sacar al primero de la fila).
