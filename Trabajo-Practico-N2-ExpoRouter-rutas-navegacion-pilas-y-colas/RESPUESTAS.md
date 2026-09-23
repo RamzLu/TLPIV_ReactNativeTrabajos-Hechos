@@ -302,7 +302,434 @@ h) En SDK 57, expo-router usa el mismo número de versión mayor que el SDK (57)
 
 ## C1. Métodos de router
 
-## <span style="color: rgb(229, 87, 87);">NOTAS</span>:
+- router.push(href):
+
+  Que hace: apila una pantalla completamente nueva en el tope
+
+- router.navigate(href)
+
+  Que hace: Primero revisa si esa pantalla ya estaba en algun lugar de la pila, si ya estaba te lleva hacia a ella sino funciona igual que push y apila arriba del todo
+
+- router.replace(href)
+
+  Que hace: Saca la pantalla actual (la de arriba del todo) e inmediatamente pone otra en su lugar, y como reemplazo la anterior en vez de ponerla encuma si ahora toca atras no puede volver a la que saco, por ejemplo es util cuando inicia sesion, pasa del login al inicio reemplazando la pantalla, asi el usuario no puede volver al login tocando atras
+
+- router.back()
+
+  Que hace: hace la operacion de pop(), saca y descarta la pantalla que esta en el tope de la pila, dejandote ver la que esta debajo
+
+- router.dismissTo(href)
+
+  Que hace: Descarta varias pantallas juntas desde arriba, bajando en la pila hasta encontrar la pantalla específica que le pediste, y la deja en el tope. Es ideal para cuando te metiste muy profundo (ej: Inicio -&gt; Menú -&gt; Producto -&gt; Confirmar) y quieres volver a "Menú" de un solo salto, tirando todas las demás.
+
+- router.dismissAll()
+
+  Que hace: Saca absolutamente todas las pantallas de arriba hacia abajo, dejándote únicamente con la primera pantalla de todas (la base de la pila).
+
+- router.canGoBack()
+
+  Que hace: No le hace absolutamente nada. Solo se asoma a mirar y responde con un `true` (verdadero) si hay más de una pantalla en la pila para poder retroceder, o `false` (falso) si estás en la base y ya no hay a dónde volver.
+
+- router.setParams({...})
+
+  Tampoco agrega ni quita pantallas. Solo le cambia los datos (parámetros) a la pantalla que está actualmente en el tope de la pila, sin obligarte a recargarla.
+
+## C2. Simulación de la pila
+
+1. router.push("/productos/1")
+
+Qué pasa: Apilamos la nueva pantalla arriba de la base.
+
+Pila resultante: \[ /productos, /productos/1 \]
+
+2. router.push("/productos/2")
+
+Qué pasa: Apilamos otra pantalla más en el tope.
+
+Pila resultante: \[ /productos, /productos/1, /productos/2 \]
+
+3. router.navigate("/productos/5")
+
+Qué pasa: navigate busca si /productos/5 ya estaba en la pila. Como no estaba, actúa igual que un push y la agrega arriba de todo.
+
+Pila resultante: \[ /productos, /productos/1, /productos/2, /productos/5 \] 4) router.push("/perfil")
+
+Qué pasa: Apilamos la pantalla de perfil en el tope.
+
+Pila resultante: \[ /productos, /productos/1, /productos/2, /productos/5, /perfil \] 5) router.replace("/buscar")
+
+Qué pasa: ¡Ojo aquí! replace no apila. Saca la última pantalla (/perfil) y pone /buscar exactamente en ese mismo lugar.
+
+Pila resultante: \[ /productos, /productos/1, /productos/2, /productos/5, /buscar \] 6) router.back()
+
+Qué pasa: Hace un paso hacia atrás, sacando la pantalla que quedó en el tope (/buscar).
+
+Pila resultante: \[ /productos, /productos/1, /productos/2, /productos/5 \] 7) router.dismissTo("/productos")
+
+Qué pasa: Tira todas las pantallas necesarias desde arriba hasta encontrar /productos y dejarla en el tope. Como /productos estaba en la base, descartamos todas las demás de un solo golpe.
+
+Pila resultante: \[ /productos \] 8) router.canGoBack() → ¿qué devuelve?
+
+Qué pasa: Solo mira la pila actual. Como nos quedó una sola pantalla (\[ /productos \]), ya no hay ninguna carta debajo para retroceder.
+
+Pila resultante (respuesta): Devuelve false.
+
+## C3. ¿Link o router?
+
+a) El usuario toca la tarjeta de un producto en una lista.
+
+- &lt;Link&gt;
+
+- Método/Prop: href="/productos/id" (o la ruta que sea).
+
+- Justificación: Es un simple toque que lleva a otra pantalla. No hay que calcular ni guardar nada antes de viajar, así que el enlace directo es la mejor opción y la más rápida.
+
+b) Se guarda un formulario, la API responde OK y hay que mostrar la pantalla de éxito.
+
+- router
+
+- Método/Prop: router.replace('/exito') (o router.push('/exito')).
+
+- Justificación: La navegación no ocurre apenas el usuario toca el botón "Guardar", sino que el código tiene que viajar a internet (la API), esperar la respuesta, y recién después de que todo sale bien, la aplicación decide cambiar de pantalla. Como hay lógica en el medio, usamos el router.
+
+c) Botón “Cancelar” dentro de un modal.
+
+router
+
+- Método/Prop: router.back()
+
+- Justificación: Al cancelar, no queremos viajar a un lugar nuevo, solo queremos retroceder, tirar la pantalla actual (el modal) a la basura y quedarnos donde estábamos. router.back() es perfecto para deshacer ese último paso.
+
+d) Después de un login exitoso hay que ir a la pantalla principal.
+
+- router
+
+- Método/Prop: router.replace('/')
+
+- Justificación: Igual que en el formulario, primero hay que validar que el usuario y la clave sean correctos. Usamos específicamente replace en lugar de push para borrar la pantalla de Login de la pila. Así, si el usuario toca "atrás" por accidente, no vuelve a la pantalla de poner la contraseña.
+
+e) Volver desde el detalle de un pedido directamente a la lista de pedidos, que quedó tres pantallas más abajo.
+
+- router
+
+- Método/Prop: router.dismissTo('/pedidos')
+
+- Justificación: Como acabamos de aprender en el ejercicio anterior, dismissTo es exactamente la herramienta que descarta varias pantallas de un solo golpe para regresarte a una base específica, limpiando todo el historial intermedio.
+
+## C4. Escribí el código
+
+**a)** Un &lt;Link&gt; que abra el producto con id 8 usando href como objeto.
+
+```
+<Link href={{ pathname: "/productos/[id]", params: { id: 8 } }}>
+  Ver Producto 8
+</Link>
+```
+
+En lugar de escribir la ruta de una sola vez como un texto simple ("/productos/8"), abrimos llaves {} para pasarle un objeto (una colección de datos). Le decimos: "El molde de la ruta es /productos/\[id\] (el pathname), y el dato que quiero meter en ese molde es el número 8 (los params)". Esto es súper útil cuando el número "8" viene de una base de datos y no lo sabemos de antemano.
+
+**b)** Un &lt;Link&gt; a /perfil que siempre apile, aunque la pantalla ya exista.
+
+```
+<Link href="/perfil" push>
+  Ir a mi Perfil
+</Link>
+```
+
+Por defecto, los links de Expo son inteligentes y si la pantalla de perfil ya está abierta abajo en la pila, te llevan a ella sin crear una nueva (eso es navigate). Al agregarle simplemente la palabra push, le damos la orden estricta: "No me importa si ya existe, quiero que imprimas una carta nueva idéntica y la pongas en el tope de la pila".
+
+c) Un botón (Pressable) propio que funcione como link a /carrito usando asChild.
+
+```
+<Link href="/carrito" asChild>
+  <Pressable>
+    <Text>Ir al Carrito</Text>
+  </Pressable>
+</Link>
+```
+
+Normalmente, &lt;Link&gt; crea su propio texto azul tocable. Pero a veces queremos que nuestro propio botón personalizado (el Pressable) tenga el poder de viajar. La palabra mágica asChild (que significa "como hijo") hace que el &lt;Link&gt; se vuelva invisible y le pase todos sus "poderes de teletransportación" directamente al botón que tiene adentro. Así, logramos un botón con nuestro propio diseño, pero que navega como un link profesional.
+
+## C5. Pensar
+
+En una web, cada &lt;Link&gt; se convierte en un &lt;a href&gt; real. ¿Qué ventaja concreta tiene eso para el usuario?
+
+```
+   Tiene muchísimas ventajas para el usuario de computadora. Al ser un enlace web de verdad, el usuario puede hacerle **clic derecho y elegir "Abrir en una pestaña nueva"**. También puede pasar el mouse por encima y ver en la esquina inferior de la pantalla hacia dónde lo va a llevar antes de hacer clic. Además, permite que los buscadores (como Google) puedan leer tu página y entender cómo se conectan tus pantallas.
+```
+
+¿Qué pasa en el celular, donde no hay barra de direcciones?
+
+```
+     En el celular, como no existen las "pestañas nuevas" ni el "clic derecho", Expo Router es inteligente y convierte ese `<Link>` en un elemento táctil nativo (básicamente, funciona como un botón). Al tocarlo, no cambia la dirección en una barra (porque no la hay), sino que ejecuta la acción de **apilar una nueva carta** (la nueva pantalla) sobre la pila que venimos hablando.
+```
+
+# Parte D · Navegadores: Stack, Tabs y Drawer
+
+## D1. Comparación
+
+1. Stack (La pila)
+
+- ¿Apila pantallas?: Sí. Cada pantalla nueva se pone encima de la anterior.
+
+- ¿Cómo cambia de pantalla el usuario?: Tocando botones/links dentro de la pantalla, o usando la flecha y el gesto de "Atrás" del celular.
+
+- ¿Desde dónde se importa en SDK 57?: `expo-router`.
+
+- Un caso de uso típico: Entrar desde la lista de "Todos los productos" hacia la pantalla de "Detalle de una hamburguesa".
+
+### 
+
+2. Tabs (Las pestañas)
+
+- ¿Apila pantallas?: No. Cambia entre pantallas paralelas y principales.
+
+- ¿Cómo cambia de pantalla el usuario?: Tocando los íconos de la barra inferior (bottom bar).
+
+- ¿Desde dónde se importa en SDK 57?: `expo-router`.
+
+- Un caso de uso típico: La navegación principal de tu app. Ejemplo: Inicio | Carrito | Mi Perfil.
+
+3. Drawer (El menú lateral)
+
+- ¿Apila pantallas?: No. Al igual que los Tabs, cambia la pantalla principal que estás viendo.
+- ¿Cómo cambia de pantalla el usuario?: Deslizando el dedo desde el borde izquierdo hacia el centro, o tocando el ícono de "hamburguesa" (las tres rayitas arriba a la izquierda).
+- ¿Desde dónde se importa en SDK 57?: `expo-router/drawer`
+- Un caso de uso típico: Para guardar opciones secundarias que ocuparían mucho espacio en los Tabs. Ejemplo: Configuración, Términos y condiciones, Ayuda, Cerrar sesión.
+
+## D2. Cada tab tiene su pila
+
+En una app con pestañas Inicio y Productos (Productos tiene su propio Stack), el usuario está en Productos, abre el detalle del producto 4, cambia a Inicio y vuelve a Productos.
+
+- ¿Qué pantalla ve?
+  - Ve el detalle del producto 4.
+- ¿Por qué?
+  - Porque cada pestaña (Tab) tiene y recuerda su propia "pila" independiente. Cuando cambiaste a la pestaña de Inicio, el sistema no destruyó la torre de cartas que habías armado en la sección de Productos, simplemente la dejó en pausa. Al volver a tocar ese Tab, retomas exactamente donde te quedaste: mirando la carta que quedó en el tope.
+- ¿Qué app que uses todos los días se comporta así?
+- **Instagram**: Si estás en la pestaña de inicio (la casita) y entras a mirar el perfil de alguien, luego te vas a la pestaña de buscar (la lupa), y finalmente vuelves a tocar la casita, la app no te manda de vuelta al principio de tu muro. Sigues exactamente en el perfil donde te habías quedado. (También pasa igual en WhatsApp o Spotify).
+
+## D3. ¿Dónde va cada pantalla?
+
+Aplicando la regla práctica de navegadores anidados, indicá si cada pantalla va en el Stack raíz o dentro de una tab:
+
+1. El detalle de un producto, que debe mantener visible la barra de pestañas.
+
+**Respuesta:** Dentro de una tab.
+
+**Justificación:** Como el enunciado exige que la barra de abajo siga visible, la pantalla tiene que vivir en la pila interna de esa pestaña. 2. Un modal para confirmar una compra, que debe tapar la barra de pestañas.
+
+**Respuesta:** En el Stack raíz.
+
+**Justificación:** Al pedir que el modal tape la barra de pestañas, necesitamos que la pantalla se dibuje en la capa más alta de la aplicación, totalmente por fuera del navegador de Tabs. 3. La pantalla de login que se abre como modal.
+
+**Respuesta:** En el Stack raíz.
+
+**Justificación:** El inicio de sesión es el ejemplo clásico de una pantalla que debe ocupar todo el celular. No queremos que el usuario pueda ver ni tocar la barra de pestañas del menú principal hasta que no ponga su usuario y contraseña correctamente. 4. La pantalla “Mis pedidos anteriores” dentro de la sección Perfil.
+
+**Respuesta:** Dentro de una tab.
+
+**Justificación:** Es una pantalla secundaria que se abre buceando más profundo dentro de una sección principal (el Perfil). Al estar dentro de un Tab, la barra inferior sigue visible, permitiéndole al usuario saltar de vuelta al "Inicio" en cualquier momento con un solo toque.
+
+## D4. Configurar el Stack
+
+1. ¿Qué diferencia hay entre screenOptions y las options de un Stack.Screen?
+
+screenOptions (que se pone en la etiqueta principal &lt;Stack&gt;) es como una regla general de la casa: afecta a todas las pantallas por igual al mismo tiempo. En cambio, las options (que van en &lt;Stack.Screen&gt;) son reglas específicas para una sola habitación. Si a una pantalla le pones sus propias options, estas ignoran la regla general y hacen lo que ellas dicen. 2. ¿Por qué (tabs) tiene headerShown: false?
+
+Porque la sección de pestañas suele tener sus propios títulos arriba (uno para Inicio, otro para Productos, etc.). Si no apagamos el título general de la base poniendo esto en falso, el usuario vería dos barras de títulos encimadas, una arriba de la otra. 3. Si existe src/app/perfil-publico.tsx pero no está declarada en el Stack, ¿existe la pantalla? ¿Para qué sirve declararla?
+
+con solo crear el archivo, la pantalla y la ruta ya funcionan solas. Declararla a mano acá en el layout solo sirve si necesitas personalizar su diseño (por ejemplo, cambiarle el título, o hacer que aparezca como un modal). Si la quieres normalita, no hace falta que la anotes 4. Nombrá cuatro valores posibles de presentation. ¿Cuál usarías para una hoja inferior que se abre al 50%?
+
+Cuatro opciones comunes son: 'card' (la normal que desliza de costado), 'modal' (sube desde abajo y tapa todo), 'transparentModal' (como el modal pero con fondo transparente), y 'formSheet' (hoja inferior). 5. ¿Cómo cambiarías el título del header desde la propia pantalla de detalle para que diga “Producto 7”?
+
+No lo cambias en este layout general, sino que vas al archivo de la pantalla en sí, y en el código agregas este componente de React: &lt;Stack.Screen 'Producto 7' options="{{" title: }}/&gt;. De esta forma, la pantalla misma se hace cargo de cambiar su propio cartelito de arriba.
+
+## D5. Tabs y Drawer en SDK 57
+
+1. ¿Qué cambió en SDK 57 al importar Tabs? ¿Qué alternativa experimental existe?
+
+La importación de Tabs se consolidó y se hace directamente desde 'expo-router'. La alternativa experimental que se está probando son los "Native Tabs" (pestañas 100% nativas), que buscan conectarse aún más directo con el sistema operativo del celular para ser más rápidas, aunque todavía están en fase de pruebas 2. ¿Qué dos paquetes necesita el Drawer y qué componente conviene poner en el layout raíz para los gestos?
+
+Necesita exactamente los dos paquetes que ya instalaste en tu proyecto: react-native-gesture-handler y react-native-reanimated. Para que el celular detecte bien el gesto de tu dedo al deslizar el menú, conviene envolver toda la aplicación (en tu layout raíz) con el componente &lt;GestureHandlerRootView&gt; 3. ¿Hace falta instalar @react-navigation/drawer en SDK 57? ¿Por qué?
+
+No, no hace falta (y no debes hacerlo). Expo Router ya lo trae integrado y escondido "bajo el capó". Solo necesitas importarlo escribiendo import { Drawer } from 'expo-router/drawer'. Si lo instalas por separado a mano, vas a chocar versiones y romper la aplicación 4. Si hay navegadores anidados, ¿en qué navegador actúa router.back()?
+
+Actúa siempre en el navegador más cercano o "más profundo" en el que se encuentre el usuario. Por ejemplo, si estás dentro de una pila de Productos, que a su vez está dentro de una pestaña, router.back() solo va a retroceder las cartas de la pila de Productos, sin sacarte de la pestaña
+
+# Parte E · Rutas dinámicas, parámetros y hooks
+
+## E1. Encontrá el error
+
+Los productos tienen id numérico ({ id: 3, nombre: "Chipá" }). La pantalla nunca encuentra el producto. Explicá por qué y corregilo.
+
+```
+src/app/(tabs)/productos/[id].tsx
+export default function DetalleProducto() {
+ const { id } = useLocalSearchParams<{ id: string }>();
+ const producto = productos.find((p) => p.id === id);
+ if (id === 3) console.log('Es el chipá');
+ if (!producto) return <Text>No existe el producto {id}</Text>;
+ return <Text>{producto.nombre}</Text>;
+}
+```
+
+El problema está en el formato de los datos. En internet, todo lo que viaja a través de una URL (como el final de tu ruta /productos/3) siempre se lee como texto puro.
+
+Entonces, cuando el código saca el { id } de la URL en la primera línea, el celular recibe el texto "3" (una palabra), no el número matemático 3.
+
+Sin embargo, la lista de productos tiene el ID guardado como un número real ({ id: 3 }). Cuando usas el triple igual (===) en la línea del find (p.id === id), le estás pidiendo a la computadora que verifique que sean idénticos de forma estricta. Como el número matemático 3 no es estrictamente igual al texto "3", la computadora dice "no es lo mismo" y la búsqueda falla siempre. (Lo mismo pasa con el if (id === 3) que está debajo)
+
+**Como solucionarlo:**
+
+```
+export default function DetalleProducto() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  
+  //convertimos el texto 'id' a un número real
+  const idNumero = Number(id); 
+
+  //comparamos número con número en la búsqueda
+  const producto = productos.find((p) => p.id === idNumero);
+  
+  // este console.log ahora también funciona
+  if (idNumero === 3) console.log('Es el chipá');
+  
+  if (!producto) return <Text>No existe el producto {id}</Text>;
+  
+  return <Text>{producto.nombre}</Text>;
+}
+```
+
+## E2. Catch-all
+
+Para src/app/docs/\[...slug\].tsx, indicá el valor de slug en cada caso:
+
+1. URL: /docs/react
+
+- Valor de slug: \["react"\]
+
+- Explicación: Hay una sola palabra después de la carpeta docs, así que te devuelve una lista con ese único dato.
+
+2. URL: /docs/react/hooks/useState
+
+- Valor de slug: \["react", "hooks", "useState"\]
+
+- Explicación: Corta la ruta en cada barra y arma una lista ordenada con las tres palabras.
+
+3. URL: /docs
+
+- Valor de slug: No coincide / Da error 404 (undefined)
+
+- Explicación: ¡Este es un caso trampa! El comodín de un solo corchete \[...slug\] exige que haya por lo menos una cosa escrita después de la carpeta. Como la URL termina en "docs" y no hay nada más, este archivo no se activa. (Dato ninja: si quisieras que atrape también a la ruta vacía, el archivo tendría que escribirse con doble corchete: \[\[...slug\]\].tsx)
+
+## E3. Anatomía de una URL
+
+Dada la URL rutasipf://buscar?q=mate&categoria=bebidas:
+
+1. Identificá el scheme, la ruta y los parámetros de búsqueda.
+
+   **Scheme** (el nombre único de la app): rutasipf (es todo lo que está antes del ://).
+
+   **Ruta** (la pantalla específica): buscar (o /buscar).
+
+   **Parámetros de búsqueda** (los datos extra): q=mate y categoria=bebidas (todo lo que viene después del signo de interrogación ?, separado por el &).
+
+2. ¿Qué devuelve useLocalSearchParams() en buscar.tsx?
+
+   **Respuesta:** Devuelve automáticamente un objeto empaquetando esos datos extra. Quedaría exactamente así: { q: "mate", categoria: "bebidas" }
+
+3. ¿Hacen falta corchetes en el nombre del archivo para recibir q? ¿Por qué?
+
+   **Respuesta:** No, no hacen falta corchetes.
+
+   **Por qué:** Porque los corchetes (ej: \[id\].tsx) solo se usan cuando el dato dinámico es parte de la ruta principal (como /productos/3). Pero todo lo que escribimos después del signo de interrogación ? se consideran "datos extra" (query parameters). Cualquier archivo normal, como buscar.tsx, puede leer esos datos extra usando useLocalSearchParams() sin necesidad de cambiar su nombre
+
+4. En el buscador, cada vez que el usuario escribe se llama a router.setParams({ q: texto }) en lugar de router.push. Dá dos razones.
+
+   **Razón 1 (El historial infinito):** Si usarás push, por cada letra que escribas (por ejemplo: "m", "ma", "mat", "mate"), el celular apilaría una pantalla nueva en tu historial. Si el usuario quisiera tocar el botón "Atrás", tendría que retroceder letra por letra. Al usar setParams, no apilamos cartas nuevas, solo le cambiamos el texto a la carta que ya estamos viendo.
+
+   **Razón 2 (Rendimiento):** Dibujar una pantalla nueva desde cero con push requiere que el celular piense y trabaje mucho. setParams es mucho más rápido y fluido, ideal para actualizar la pantalla al instante mientras los dedos del usuario se mueven rápido por el teclado.
+
+## E4. ¿Dónde estoy?
+
+Completá los valores de cada hook en las dos URLs de la app de ejemplo (buscar.tsx está en el Stack raíz; el detalle está en (tabs)/productos/\[id\].tsx)
+
+1.  En /productos/3
+
+- usePathname(): "/productos/3"
+
+  (Explicación: Devuelve la dirección web limpia y bonita, tal como la vería el usuario).
+
+- useSegments(): \["(tabs)", "productos", "\[id\]"\]
+
+  (Explicación: Devuelve la ruta real de tus carpetas. Como el enunciado dice que el archivo está dentro de (tabs), este hook sí lee los paréntesis y el nombre original del archivo con corchetes).
+
+- useLocalSearchParams(): { id: "3" }
+
+  (Explicación: Atrapa el número que reemplazó al comodín \[id\]).
+
+2.  En /buscar?q=chipa
+
+- usePathname(): "/buscar"
+
+  (Explicación: Devuelve la URL limpia, ignorando todo lo que está después del signo de interrogación ?).
+
+- useSegments(): \["buscar"\]
+
+  (Explicación: Como el enunciado dice que está en el Stack raíz, no hay carpetas previas, solo el nombre del archivo).
+
+- useLocalSearchParams(): { q: "chipa" }
+
+  (Explicación: Atrapa todos los datos extra que viajan al final de la URL).
+
+## E5. Local vs global
+
+1.  ¿Cuál es la diferencia entre useLocalSearchParams y useGlobalSearchParams? ¿Cuál es la opción por defecto y por qué? }
+
+   **Respuesta:** useLocalSearchParams atrapa únicamente los datos (parámetros) que fueron enviados directamente a la pantalla que estás viendo. Por el contrario, useGlobalSearchParams atrapa los datos de todas las pantallas que están vivas en el fondo de la pila en ese momento.
+
+   **Por defecto y por qué**: Se usa por defecto useLocalSearchParams. Es mucho más seguro porque aísla tu pantalla; así evitas que los datos de otra pestaña o pantalla vieja se mezclen por accidente con la pantalla actual y te rompan la lógica.
+2. ¿Para qué sirve useFocusEffect? Dá un ejemplo de uso. 
+
+   **Respuesta:** Sirve para ejecutar un bloque de código solamente cuando la pantalla vuelve a estar en primer plano (cuando el usuario la está viendo activamente). Como en los celulares las pantallas se apilan y no se destruyen, el clásico useEffect a veces no se entera de que volviste a mirar una pantalla que estaba abajo en la pila.
+
+   **Ejemplo de uso:** La pantalla de "Mi Carrito". Usas useFocusEffect para pedirle a la base de datos que actualice los precios y el stock cada vez que el usuario entra a esa pestaña, garantizando que nunca vea información vieja.
+3. La URL /productos/mate abre la pantalla de detalle aunque no exista ese producto. ¿Es un error de Expo Router? ¿De quién es la responsabilidad?
+
+   <span>**Respuesta:** ¡No es un error de Expo Router! Su único trabajo es de tránsito: vio una ruta que encajaba con el molde </span>/productos/\[id\]<span> y abrió la puerta hacia ese archivo. Expo Router no sabe qué vendes en tu comedor.</span>
+
+   <span>**De quién es la responsabilidad:** Es 100% responsabilidad del desarrollador (nuestra). Es la pantalla misma la que debe agarrar la palabra "mate", buscarla en la base de datos, y si no la encuentra, dibujar un cartel que diga "Lo sentimos, producto no encontrado".</span>
+
+# Parte F · Redirecciones, rutas protegidas y deep links
+
+## F1. Redirect
+
+a) ¿Qué hace y a qué método de router equivale? b) ¿Por qué una redirección debe reemplazar y no apilar? Describí el problema que aparecería.
+
+## F2. Stack.Protected
+
+Completá los guard para que privado solo exista con sesión y login solo sin sesión. Luego respondé.
+
+```
+src/app/_layout.tsx
+function NavegacionRaiz() {
+ const { usuario } = useAuth();
+ const conSesion = usuario !== null;
+ return (
+ <Stack>
+ <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+ <Stack.Protected guard={ ______ }>
+ <Stack.Screen name="privado" />
+ </Stack.Protected>
+ <Stack.Protected guard={ ______ }>
+ <Stack.Screen name="login" options={{ presentation: 'modal' }} />
+ </Stack.Protected>
+ </Stack>
+ );
+}
+```
+
+<span style="color: rgb(229, 87, 87);">NOTAS</span>:
 
 - Una <u>pila </u>(o stack) es una estructura donde los elementos se colocan uno encima de otro, como una **pila de platos** \
   **Regla:** Solo puedes interactuar con el elemento que está arriba del todo.
@@ -328,3 +755,6 @@ const elemento = this.#items[this.#frenteIndex]; // 2. Bajamos el dedo al siguie
 this.#frenteIndex++; // 3. Entregamos el elemento que leímos en el paso 1 return elemento;
 }
 ```
+
+- Usas `<Link>` cuando el viaje es directo. El usuario toca con el dedo y *pum*, viaja a la otra pantalla, sin pensar nada más.
+- Usas `router` cuando la aplicación tiene que "pensar" o hacer algo antes de viajar (como calcular, guardar en una base de datos o validar una contraseña).
