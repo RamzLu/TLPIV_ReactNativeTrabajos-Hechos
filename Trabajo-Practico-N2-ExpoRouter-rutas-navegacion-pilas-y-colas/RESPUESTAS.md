@@ -654,7 +654,7 @@ Dada la URL rutasipf://buscar?q=mate&categoria=bebidas:
 
 Completá los valores de cada hook en las dos URLs de la app de ejemplo (buscar.tsx está en el Stack raíz; el detalle está en (tabs)/productos/\[id\].tsx)
 
-1.  En /productos/3
+1. En /productos/3
 
 - usePathname(): "/productos/3"
 
@@ -668,7 +668,7 @@ Completá los valores de cada hook en las dos URLs de la app de ejemplo (buscar.
 
   (Explicación: Atrapa el número que reemplazó al comodín \[id\]).
 
-2.  En /buscar?q=chipa
+2. En /buscar?q=chipa
 
 - usePathname(): "/buscar"
 
@@ -684,27 +684,31 @@ Completá los valores de cada hook en las dos URLs de la app de ejemplo (buscar.
 
 ## E5. Local vs global
 
-1.  ¿Cuál es la diferencia entre useLocalSearchParams y useGlobalSearchParams? ¿Cuál es la opción por defecto y por qué? }
+1. ¿Cuál es la diferencia entre useLocalSearchParams y useGlobalSearchParams? ¿Cuál es la opción por defecto y por qué? }
 
-   **Respuesta:** useLocalSearchParams atrapa únicamente los datos (parámetros) que fueron enviados directamente a la pantalla que estás viendo. Por el contrario, useGlobalSearchParams atrapa los datos de todas las pantallas que están vivas en el fondo de la pila en ese momento.
+**Respuesta:** useLocalSearchParams atrapa únicamente los datos (parámetros) que fueron enviados directamente a la pantalla que estás viendo. Por el contrario, useGlobalSearchParams atrapa los datos de todas las pantallas que están vivas en el fondo de la pila en ese momento.
 
-   **Por defecto y por qué**: Se usa por defecto useLocalSearchParams. Es mucho más seguro porque aísla tu pantalla; así evitas que los datos de otra pestaña o pantalla vieja se mezclen por accidente con la pantalla actual y te rompan la lógica.
-2. ¿Para qué sirve useFocusEffect? Dá un ejemplo de uso. 
+**Por defecto y por qué**: Se usa por defecto useLocalSearchParams. Es mucho más seguro porque aísla tu pantalla; así evitas que los datos de otra pestaña o pantalla vieja se mezclen por accidente con la pantalla actual y te rompan la lógica. 2. ¿Para qué sirve useFocusEffect? Dá un ejemplo de uso.
 
-   **Respuesta:** Sirve para ejecutar un bloque de código solamente cuando la pantalla vuelve a estar en primer plano (cuando el usuario la está viendo activamente). Como en los celulares las pantallas se apilan y no se destruyen, el clásico useEffect a veces no se entera de que volviste a mirar una pantalla que estaba abajo en la pila.
+**Respuesta:** Sirve para ejecutar un bloque de código solamente cuando la pantalla vuelve a estar en primer plano (cuando el usuario la está viendo activamente). Como en los celulares las pantallas se apilan y no se destruyen, el clásico useEffect a veces no se entera de que volviste a mirar una pantalla que estaba abajo en la pila.
 
-   **Ejemplo de uso:** La pantalla de "Mi Carrito". Usas useFocusEffect para pedirle a la base de datos que actualice los precios y el stock cada vez que el usuario entra a esa pestaña, garantizando que nunca vea información vieja.
-3. La URL /productos/mate abre la pantalla de detalle aunque no exista ese producto. ¿Es un error de Expo Router? ¿De quién es la responsabilidad?
+**Ejemplo de uso:** La pantalla de "Mi Carrito". Usas useFocusEffect para pedirle a la base de datos que actualice los precios y el stock cada vez que el usuario entra a esa pestaña, garantizando que nunca vea información vieja. 3. La URL /productos/mate abre la pantalla de detalle aunque no exista ese producto. ¿Es un error de Expo Router? ¿De quién es la responsabilidad?
 
-   <span>**Respuesta:** ¡No es un error de Expo Router! Su único trabajo es de tránsito: vio una ruta que encajaba con el molde </span>/productos/\[id\]<span> y abrió la puerta hacia ese archivo. Expo Router no sabe qué vendes en tu comedor.</span>
+**Respuesta:** ¡No es un error de Expo Router! Su único trabajo es de tránsito: vio una ruta que encajaba con el molde /productos/\[id\] y abrió la puerta hacia ese archivo. Expo Router no sabe qué vendes en tu comedor.
 
-   <span>**De quién es la responsabilidad:** Es 100% responsabilidad del desarrollador (nuestra). Es la pantalla misma la que debe agarrar la palabra "mate", buscarla en la base de datos, y si no la encuentra, dibujar un cartel que diga "Lo sentimos, producto no encontrado".</span>
+**De quién es la responsabilidad:** Es 100% responsabilidad del desarrollador (nuestra). Es la pantalla misma la que debe agarrar la palabra "mate", buscarla en la base de datos, y si no la encuentra, dibujar un cartel que diga "Lo sentimos, producto no encontrado".
 
 # Parte F · Redirecciones, rutas protegidas y deep links
 
 ## F1. Redirect
 
-a) ¿Qué hace y a qué método de router equivale? b) ¿Por qué una redirección debe reemplazar y no apilar? Describí el problema que aparecería.
+a) ¿Qué hace `<Redirect href="/productos"/>` y a qué método de router equivale?
+
+Sirve para mandar al user automaticamente e instantaneamente a otra pantalla apenas intenta entrar a la actual, su equivalente seria router.replace
+
+b) ¿Por qué una redirección debe reemplazar y no apilar? Describí el problema que aparecería
+
+Si la redireccion apilara la nueva pantalla la pantalla original quedaria guardada en el historial, el problema seria que si el user toca el boton atras volveria a la pantalla que tiene Redirect y lo volveria a llevar hacia adelante y el user queda atrapado infinitamente
 
 ## F2. Stack.Protected
 
@@ -718,16 +722,52 @@ function NavegacionRaiz() {
  return (
  <Stack>
  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
- <Stack.Protected guard={ ______ }>
+ <Stack.Protected guard={conSesion}>
  <Stack.Screen name="privado" />
  </Stack.Protected>
- <Stack.Protected guard={ ______ }>
+ <Stack.Protected guard={conSesion}>
  <Stack.Screen name="login" options={{ presentation: 'modal' }} />
  </Stack.Protected>
  </Stack>
  );
 }
 ```
+
+a) ¿Qué le pasa a una pantalla cuando su guard es false?
+
+La pantalla desaparece por completo del mapa de navegacion. No es que se hace invisible para Expo Router, literalmente deja de existir y no se puede viajar hacia ella de ninguna forma
+
+b) Al iniciar sesión, el modal de login se cierra solo, sin llamar a router.back(). ¿Por qué?
+
+Al iniciar sesion el login se cierra por la reactividad de los datos o sea que cuando el user inicia sesion la variable conSesion se hace ture y hace que la condicion del login !conSesion se hace false, y el Stack.Protected "borra" el login y lo saca de la pila automaticamente
+
+c) Aparece el aviso "The action 'NAVIGATE'... was not handled by any navigator". ¿Qué lo causa y cómo se evita?
+
+Pasa cuando se intenta navegar hacia una pantalla que en ese momento tiene su guard en false como este borro del mapa, el router se confunde y le avisa que no encuencuentra donde ir, y se evita redirigiendo al usuario o ocultando los botones que lleven a esa zona si no tiene permisos
+
+d) ¿Qué ventaja tiene `Stack.Protected` frente a poner un `<Redirect>` condicional en cada pantalla?
+
+Le da seguridad al codigo y queda mas limpio, con redirect dentro de la pantalla esta primero se tiene que renderizar para leer el codigo y ahi recien enviarle hacia afuera (que puede dejar expuestos datos sensibles por un segundo) pero con Stack.Protected controla todo desde un archivo y la pantalla no se llega ni a cargar
+
+## F3. 404, anchor y rutas tipadas
+
+Explicá brevemente para qué sirve cada uno y en qué archivo se define:
+
+a) +not-found.tsx
+
+Es la pantalla de Error 404 de pagina no encontrada, expo lo manda automaticamente a esta pantalla en vez de romperse
+
+Se define en la raiz de la carpeta principal de las rutas
+
+b) export const unstable_settings = { anchor: "(tabs)" }
+
+Si el usuario entra a la app mediante un link directo a una pantalla profunda,se obliga a cargar el navegador `(tabs)` en el historial de forma invisible antes de mostrarle la pantalla final
+
+se define adentro del archivo de configuración `_layout.tsx`
+
+c) `typedRoutes`: ¿qué pasa si escribís `<Link href="/prodcutos"/>`? ¿Dónde se generan los tipos?
+
+Si escribe prodcutos el editor de codigo tira error, porque las rutas tipadaspq el codigo verifica la URL exista, Expo los genera de forma automática y los guarda en segundo plano
 
 <span style="color: rgb(229, 87, 87);">NOTAS</span>:
 
