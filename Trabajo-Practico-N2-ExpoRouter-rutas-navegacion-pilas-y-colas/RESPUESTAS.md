@@ -702,11 +702,11 @@ Completá los valores de cada hook en las dos URLs de la app de ejemplo (buscar.
 
 ## F1. Redirect
 
-a) ¿Qué hace `<Redirect href="/productos"/>` y a qué método de router equivale?
+**a) ¿Qué hace** `<Redirect href="/productos"/>` **y a qué método de router equivale?**
 
 Sirve para mandar al user automaticamente e instantaneamente a otra pantalla apenas intenta entrar a la actual, su equivalente seria router.replace
 
-b) ¿Por qué una redirección debe reemplazar y no apilar? Describí el problema que aparecería
+**b) ¿Por qué una redirección debe reemplazar y no apilar? Describí el problema que aparecería**
 
 Si la redireccion apilara la nueva pantalla la pantalla original quedaria guardada en el historial, el problema seria que si el user toca el boton atras volveria a la pantalla que tiene Redirect y lo volveria a llevar hacia adelante y el user queda atrapado infinitamente
 
@@ -733,7 +733,7 @@ function NavegacionRaiz() {
 }
 ```
 
-a) ¿Qué le pasa a una pantalla cuando su guard es false?
+**a) ¿Qué le pasa a una pantalla cuando su guard es false?**
 
 La pantalla desaparece por completo del mapa de navegacion. No es que se hace invisible para Expo Router, literalmente deja de existir y no se puede viajar hacia ella de ninguna forma
 
@@ -741,11 +741,11 @@ b) Al iniciar sesión, el modal de login se cierra solo, sin llamar a router.bac
 
 Al iniciar sesion el login se cierra por la reactividad de los datos o sea que cuando el user inicia sesion la variable conSesion se hace ture y hace que la condicion del login !conSesion se hace false, y el Stack.Protected "borra" el login y lo saca de la pila automaticamente
 
-c) Aparece el aviso "The action 'NAVIGATE'... was not handled by any navigator". ¿Qué lo causa y cómo se evita?
+**c) Aparece el aviso "The action 'NAVIGATE'... was not handled by any navigator". ¿Qué lo causa y cómo se evita?**
 
 Pasa cuando se intenta navegar hacia una pantalla que en ese momento tiene su guard en false como este borro del mapa, el router se confunde y le avisa que no encuencuentra donde ir, y se evita redirigiendo al usuario o ocultando los botones que lleven a esa zona si no tiene permisos
 
-d) ¿Qué ventaja tiene `Stack.Protected` frente a poner un `<Redirect>` condicional en cada pantalla?
+**d) ¿Qué ventaja tiene** `Stack.Protected` **frente a poner un** `<Redirect>` **condicional en cada pantalla?**
 
 Le da seguridad al codigo y queda mas limpio, con redirect dentro de la pantalla esta primero se tiene que renderizar para leer el codigo y ahi recien enviarle hacia afuera (que puede dejar expuestos datos sensibles por un segundo) pero con Stack.Protected controla todo desde un archivo y la pantalla no se llega ni a cargar
 
@@ -753,21 +753,71 @@ Le da seguridad al codigo y queda mas limpio, con redirect dentro de la pantalla
 
 Explicá brevemente para qué sirve cada uno y en qué archivo se define:
 
-a) +not-found.tsx
+**a) +not-found.tsx**
 
 Es la pantalla de Error 404 de pagina no encontrada, expo lo manda automaticamente a esta pantalla en vez de romperse
 
 Se define en la raiz de la carpeta principal de las rutas
 
-b) export const unstable_settings = { anchor: "(tabs)" }
+**b) export const unstable_settings = { anchor: "(tabs)" }**
 
 Si el usuario entra a la app mediante un link directo a una pantalla profunda,se obliga a cargar el navegador `(tabs)` en el historial de forma invisible antes de mostrarle la pantalla final
 
 se define adentro del archivo de configuración `_layout.tsx`
 
-c) `typedRoutes`: ¿qué pasa si escribís `<Link href="/prodcutos"/>`? ¿Dónde se generan los tipos?
+**c)** `typedRoutes`**: ¿qué pasa si escribís** `<Link href="/prodcutos"/>`**? ¿Dónde se generan los tipos?**
 
 Si escribe prodcutos el editor de codigo tira error, porque las rutas tipadaspq el codigo verifica la URL exista, Expo los genera de forma automática y los guarda en segundo plano
+
+## F4. Deep links
+
+La app tiene "scheme": "comedoripf" en app.json y la compu de desarrollo tiene la IP 192.168.1.20. Escribí la URL que abre el plato 7 (/menu/7) en cada caso:
+
+- App instalada (build propia)
+
+  comedoripf://menu//7
+
+  como es una app independiene en el celular usa directamente el nombre personalizado
+
+- Expo Go en desarrollo:
+
+  exp://192.168.1.20:8081/—/menu/7
+
+  Usa el schema de Expo la ip de la computadora, el puerto por defecto 8081 y el separador
+
+- Web (npx expo start -web):
+
+  <http://localhost:8081/menu/7>
+
+  se comporta como una pagina web normal en el navegador
+
+**¿Qué significa la parte /--/ en la URL de Expo Go? ¿Por qué el scheme propio no funciona dentro de Expo Go?**
+
+Es como una barrera o separador estricto, todo lo que esta antes del separador son instrucciones para que la app de Expo Go sepa a que compu conectarse para bajar el codigo y lo que esta despues es la ruta interna que expo usa para leer que pantalla renderizar
+
+## F5. Errores comun es
+
+Para cada situación explicá la causa y la solución:
+
+**a) Al usar con un aparece: “You are passing an array of styles to a child of ”.**
+
+- Causa: cuando usas asChild el &lt;Link&gt; usa internamente un mecanismo llamado slot para clonar el boton y pasarle una navegacion, y ese mecanismo se bugea y da error al pasarle los estilos de forma de lista o arreglo pq solo sabe procesar un objeto de estilos simples
+- Solucion: se tiene que aplanar la lispor asi decirlo para hacerlo un solo objeto antes de pasarselo al boton con `StyleSheet.flatten()`: `style={StyleSheet.flatten([estilos.boton, activo && estilos.activo])}`
+
+**b) Un compañero creó src/app/TarjetaProducto.tsx para reutilizar un componente y ahora la app tiene una ruta nueva.**
+
+- Causa: lo que pasa es que expo router tiene una regla, todo archivo que se crea dentro de la carpeta app se convierte en una pantalla navegable, el router no sabe destinguir entre una pantalla completa o un componente
+- solucion: mover el archivo fuera de la carpeta app y ponerlo dentro de una carpeta llamada components
+
+**c) Después de iniciar sesión se usa router.push("/") y, al tocar atrás, el usuario vuelve al login.**
+
+- causa: al usar push simplemente se apila la pantalla de inicio sobre la de login y la pantalla de login queda viva detras
+- solucion: se podria cambiar por el roputer.replace, asi se descarta la pantalla de login y se reemplaza por la de inicio
+
+**d) Expo Go dice que el proyecto es incompatible después de instalar un paquete con npm install.**
+
+- Causa: npm install es muy moderno y siempre baja la ultima version sin importar si esa version es compatible
+- solucion usar el paquete de npx expo install "nombre-paquete" este comando es mas inteligente y baja las versiones de la libreria que si son compatibles con el proyecto
 
 <span style="color: rgb(229, 87, 87);">NOTAS</span>:
 
