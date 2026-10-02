@@ -9,8 +9,10 @@ export default function ConfirmarPedido() {
   const router = useRouter();
 
   const total = carrito.reduce((acc, item) => acc + item.precio, 0);
+  const carritoVacio = carrito.length === 0;
 
   const handleConfirmar = () => {
+    if (carritoVacio) return;
     const idTurno = confirmarPedido(nota);
     router.replace(`/turno/${idTurno}`);
   };
@@ -30,7 +32,11 @@ export default function ConfirmarPedido() {
         multiline
       />
 
-      <Pressable style={estilos.boton} onPress={handleConfirmar}>
+      <Pressable
+        style={[estilos.boton, carritoVacio && estilos.botonDeshabilitado]}
+        onPress={handleConfirmar}
+        disabled={carritoVacio}
+      >
         <Text style={estilos.textoBoton}>Enviar a Cocina</Text>
       </Pressable>
     </View>
@@ -75,6 +81,9 @@ const estilos = StyleSheet.create({
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
+  },
+  botonDeshabilitado: {
+    backgroundColor: '#9e9e9e',
   },
   textoBoton: {
     color: '#ffffff',

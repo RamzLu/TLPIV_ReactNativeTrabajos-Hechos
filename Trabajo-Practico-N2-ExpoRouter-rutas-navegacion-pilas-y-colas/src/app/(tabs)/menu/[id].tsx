@@ -1,8 +1,8 @@
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useEffect } from 'react';
-import { platos } from '../../../../src/data/platos';
-import { useGlobalContext } from '../../../../src/context/GlobalContext';
+import { platos } from '../../../data/platos';
+import { useGlobalContext } from '../../../context/GlobalContext';
 
 export default function DetallePlato() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -33,8 +33,8 @@ export default function DetallePlato() {
       <Text style={estilos.precio}>${plato.precio}</Text>
       <Text style={estilos.descripcion}>{plato.descripcion}</Text>
 
-      <Pressable 
-        style={estilos.boton} 
+      <Pressable
+        style={estilos.boton}
         onPress={() => agregarAlCarrito(plato)}
       >
         <Text style={estilos.textoBoton}>Agregar al carrito</Text>

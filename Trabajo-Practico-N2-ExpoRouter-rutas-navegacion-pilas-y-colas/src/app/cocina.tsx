@@ -1,18 +1,16 @@
 import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
-import { useGlobalContext, Pedido, Plato } from '../context/GlobalContext';
+import { useGlobalContext } from '../context/GlobalContext';
+import type { Plato } from '../context/GlobalContext';
 import { useRouter } from 'expo-router';
 
 export default function CocinaPantalla() {
-  const { colaPedidos, pilaAtendidos, atenderSiguiente, usuario, cerrarSesion } = useGlobalContext();
+  const { pedidosEnCola, pedidosAtendidos, atenderSiguiente, usuario, cerrarSesion } = useGlobalContext();
   const router = useRouter();
 
   const handleCerrarSesion = () => {
-    cerrarSesion();
     router.replace('/(tabs)/menu');
+    cerrarSesion();
   };
-
-  const listaCola: Pedido[] = (colaPedidos as any).elementos || (colaPedidos as any).items || [];
-  const listaAtendidos: Pedido[] = (pilaAtendidos as any).elementos || (pilaAtendidos as any).items || [];
 
   return (
     <View style={estilos.contenedor}>
@@ -25,13 +23,13 @@ export default function CocinaPantalla() {
       </View>
 
       <View style={estilos.seccion}>
-        <Text style={estilos.subtitulo}>Cola de Pedidos Entrantes ({colaPedidos.tamanio})</Text>
+        <Text style={estilos.subtitulo}>Cola de Pedidos Entrantes ({pedidosEnCola.length})</Text>
         <Pressable style={estilos.botonAtender} onPress={atenderSiguiente}>
           <Text style={estilos.textoBoton}>Atender siguiente pedido</Text>
         </Pressable>
 
         <FlatList
-          data={listaCola}
+          data={pedidosEnCola}
           keyExtractor={(item) => item.idTurno.toString()}
           renderItem={({ item }) => (
             <View style={estilos.tarjetaPedido}>
@@ -45,10 +43,10 @@ export default function CocinaPantalla() {
       </View>
 
       <View style={estilos.seccion}>
-        <Text style={estilos.subtitulo}>Pila de Pedidos Atendidos ({pilaAtendidos.tamanio})</Text>
+        <Text style={estilos.subtitulo}>Pila de Pedidos Atendidos ({pedidosAtendidos.length})</Text>
         <FlatList
-          data={listaAtendidos}
-          keyExtractor={(item, index) => `${item.idTurno}-${index}`}
+          data={pedidosAtendidos}
+          keyExtractor={(item) => item.idTurno.toString()}
           renderItem={({ item }) => (
             <View style={[estilos.tarjetaPedido, estilos.atendido]}>
               <Text style={estilos.turno}>Turno #{item.idTurno} (Entregado)</Text>

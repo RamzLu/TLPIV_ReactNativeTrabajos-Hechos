@@ -26,7 +26,7 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="carrito"
+        name="carrito/index"
         options={{
           title: 'Carrito',
           tabBarBadge: carrito.length > 0 ? carrito.length : undefined,

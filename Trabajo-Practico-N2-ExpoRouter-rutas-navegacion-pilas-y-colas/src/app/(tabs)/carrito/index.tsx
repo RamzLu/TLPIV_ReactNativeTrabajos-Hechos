@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
-import { useGlobalContext } from '../../../../src/context/GlobalContext';
+import { useGlobalContext } from '../../../context/GlobalContext';
 import { Link } from 'expo-router';
 
 export default function CarritoPantalla() {

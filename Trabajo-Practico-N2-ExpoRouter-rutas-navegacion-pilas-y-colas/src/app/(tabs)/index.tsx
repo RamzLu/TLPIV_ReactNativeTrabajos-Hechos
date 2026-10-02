@@ -1,7 +1,10 @@
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Link } from 'expo-router';
+import { useGlobalContext } from '../../context/GlobalContext';
 
 export default function PantallaInicio() {
+  const { usuario } = useGlobalContext();
+
   return (
     <View style={estilos.contenedor}>
       <Text style={estilos.titulo}>Comedor IPF</Text>
@@ -26,7 +29,7 @@ export default function PantallaInicio() {
           </Pressable>
         </Link>
 
-        <Link href="/cocina" asChild>
+        <Link href={usuario ? '/cocina' : '/login'} asChild>
           <Pressable style={estilos.tarjeta}>
             <Text style={estilos.textoTarjeta}>Cocina</Text>
           </Pressable>

@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
 import { Link } from 'expo-router';
-import { platos } from '../../../../src/data/platos';
+import { platos } from '../../../data/platos';
 
 export default function ListaMenu() {
   return (

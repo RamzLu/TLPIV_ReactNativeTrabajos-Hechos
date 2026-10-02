@@ -1,17 +1,22 @@
 import { View, Text, StyleSheet, TextInput, Pressable } from 'react-native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useGlobalContext } from '../context/GlobalContext';
 import { useRouter } from 'expo-router';
 
 export default function LoginPantalla() {
   const [nombre, setNombre] = useState('');
-  const { iniciarSesion } = useGlobalContext();
+  const { usuario, iniciarSesion } = useGlobalContext();
   const router = useRouter();
+
+  useEffect(() => {
+    if (usuario) {
+      router.replace('/cocina');
+    }
+  }, [usuario, router]);
 
   const handleLogin = () => {
     if (nombre.trim() === '') return;
     iniciarSesion(nombre.trim());
-    router.replace('/cocina');
   };
 
   return (
