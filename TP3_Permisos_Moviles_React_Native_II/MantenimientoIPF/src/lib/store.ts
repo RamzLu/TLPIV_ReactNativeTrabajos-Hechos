@@ -1,4 +1,11 @@
-import type { Aviso, CategoriaReporte, Reporte, Sector } from './tipos';
+import type {
+  Aviso,
+  CategoriaReporte,
+  EstadoPermiso,
+  RecursoPermiso,
+  Reporte,
+  Sector,
+} from './tipos';
 
 let reportes: Reporte[] = [
   {
@@ -147,4 +154,54 @@ export function marcarAvisoLeido(id: string): void {
 
 export function contarAvisosNoLeidos(): number {
   return avisos.filter((a) => !a.leido).length;
+}
+
+type ListenerPermisos = () => void;
+const listenersPermisos = new Set<ListenerPermisos>();
+
+let permisosSimulados: Partial<Record<RecursoPermiso, EstadoPermiso>> = {};
+
+export function suscribirCambioPermisos(fn: ListenerPermisos): () => void {
+  listenersPermisos.add(fn);
+  return () => {
+    listenersPermisos.delete(fn);
+  };
+}
+
+function notificarCambioPermisos(): void {
+  listenersPermisos.forEach((fn) => fn());
+}
+
+export function obtenerPermisoSimulado(recurso: RecursoPermiso): EstadoPermiso | undefined {
+  return permisosSimulados[recurso];
+}
+
+export function hayPermisosSimulados(): boolean {
+  return Object.keys(permisosSimulados).length > 0;
+}
+
+export function establecerPermisoSimulado(
+  recurso: RecursoPermiso,
+  estado: EstadoPermiso | undefined,
+): void {
+  if (estado === undefined) {
+    delete permisosSimulados[recurso];
+  } else {
+    permisosSimulados[recurso] = estado;
+  }
+  notificarCambioPermisos();
+}
+
+export function reiniciarPermisosSimulados(): void {
+  permisosSimulados = {
+    camara: 'preguntable',
+    ubicacion: 'preguntable',
+    notificaciones: 'preguntable',
+  };
+  notificarCambioPermisos();
+}
+
+export function limpiarSimulacionPermisos(): void {
+  permisosSimulados = {};
+  notificarCambioPermisos();
 }

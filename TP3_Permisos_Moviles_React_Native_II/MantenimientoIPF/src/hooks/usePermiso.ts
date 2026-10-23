@@ -7,6 +7,11 @@ import {
   solicitarPermiso,
   type InfoPermiso,
 } from '@/lib/permisos';
+import {
+  establecerPermisoSimulado,
+  obtenerPermisoSimulado,
+  suscribirCambioPermisos,
+} from '@/lib/store';
 import type { EstadoPermiso, RecursoPermiso } from '@/lib/tipos';
 
 export interface ResultadoPermiso {
@@ -18,14 +23,33 @@ export interface ResultadoPermiso {
 }
 
 export function usePermiso(recurso: RecursoPermiso): ResultadoPermiso {
-  const [info, setInfo] = useState<InfoPermiso>({ estado: 'cargando', parcial: false });
+  const [info, setInfo] = useState<InfoPermiso>(() => {
+    const simulado = obtenerPermisoSimulado(recurso);
+    return simulado
+      ? { estado: simulado, parcial: false }
+      : { estado: 'cargando', parcial: false };
+  });
+
+  const actualizar = useCallback(() => {
+    const simulado = obtenerPermisoSimulado(recurso);
+    if (simulado) {
+      setInfo({ estado: simulado, parcial: false });
+      return;
+    }
+    consultarPermiso(recurso).then(setInfo);
+  }, [recurso]);
 
   useFocusEffect(
     useCallback(() => {
       let activo = true;
-      consultarPermiso(recurso).then((resultado) => {
-        if (activo) setInfo(resultado);
-      });
+      const simulado = obtenerPermisoSimulado(recurso);
+      if (simulado) {
+        if (activo) setInfo({ estado: simulado, parcial: false });
+      } else {
+        consultarPermiso(recurso).then((resultado) => {
+          if (activo) setInfo(resultado);
+        });
+      }
       return () => {
         activo = false;
       };
@@ -33,18 +57,23 @@ export function usePermiso(recurso: RecursoPermiso): ResultadoPermiso {
   );
 
   useEffect(() => {
+    return suscribirCambioPermisos(actualizar);
+  }, [actualizar]);
+
+  useEffect(() => {
     let anterior = AppState.currentState;
     const suscripcion = AppState.addEventListener('change', (nuevo) => {
       const estabaAfuera = anterior === 'background' || anterior === 'inactive';
       anterior = nuevo;
       if (estabaAfuera && nuevo === 'active') {
-        consultarPermiso(recurso).then(setInfo);
+        actualizar();
       }
     });
     return () => suscripcion.remove();
-  }, [recurso]);
+  }, [actualizar]);
 
   const pedir = useCallback(async () => {
+    establecerPermisoSimulado(recurso, undefined);
     const resultado = await solicitarPermiso(recurso);
     setInfo(resultado);
     return resultado.estado;
