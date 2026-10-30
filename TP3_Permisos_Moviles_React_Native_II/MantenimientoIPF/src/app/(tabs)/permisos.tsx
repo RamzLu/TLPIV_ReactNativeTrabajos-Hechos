@@ -44,6 +44,14 @@ export default function PantallaPermisos() {
   const colors: ThemeColors = Colors[scheme === 'dark' ? 'dark' : 'light'];
 
   const revocarEnAjustes = () => {
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined') {
+        window.alert(
+          'En el navegador, podés revocar permisos desde el ícono de configuración del sitio junto a la barra de direcciones.',
+        );
+      }
+      return;
+    }
     Alert.alert(
       'Revocar permisos',
       'Te llevaremos a la pantalla de la app en Ajustes del teléfono. Tocá en Permisos y desactivá Cámara, Ubicación o Notificaciones para volver a probar.',
@@ -56,15 +64,25 @@ export default function PantallaPermisos() {
 
   const reiniciarPermisosEnApp = () => {
     reiniciarPermisosSimulados();
-    Alert.alert(
-      'Permisos reiniciados',
-      'Todos los permisos se restablecieron a estado Sin decidir dentro de la app para que puedas probar los flujos.',
-    );
+    const mensaje =
+      'Todos los permisos se restablecieron a estado Sin decidir dentro de la app para que puedas probar los flujos.';
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      window.alert(mensaje);
+    } else {
+      Alert.alert('Permisos reiniciados', mensaje);
+    }
   };
 
   const restaurarPermisosReales = () => {
     limpiarSimulacionPermisos();
   };
+
+  const nombrePlataforma =
+    Platform.OS === 'ios'
+      ? 'iOS'
+      : Platform.OS === 'web'
+      ? 'Web'
+      : 'Android';
 
   return (
     <SafeAreaView
@@ -78,7 +96,7 @@ export default function PantallaPermisos() {
         <View style={styles.header}>
           <Text style={[styles.titulo, { color: colors.text }]}>Permisos</Text>
           <Text style={[styles.subtitulo, { color: colors.textSecondary }]}>
-            Plataforma: {Platform.OS === 'ios' ? 'iOS' : 'Android'}
+            Plataforma: {nombrePlataforma}
           </Text>
         </View>
 

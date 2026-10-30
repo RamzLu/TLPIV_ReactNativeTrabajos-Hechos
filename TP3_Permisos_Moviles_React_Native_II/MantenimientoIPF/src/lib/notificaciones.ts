@@ -5,7 +5,11 @@ import {
 } from 'expo-notifications';
 import { Platform } from 'react-native';
 
-import { agregarAviso, obtenerPreferenciaNotificaciones } from './store';
+import {
+  agregarAviso,
+  obtenerPermisoSimulado,
+  obtenerPreferenciaNotificaciones,
+} from './store';
 import type { Reporte } from './tipos';
 
 export const CANAL_REPORTES = 'reportes';
@@ -35,9 +39,31 @@ export async function avisarResolucion(
   reporte: Reporte,
 ): Promise<'notificacion' | 'bandeja'> {
   const mensaje = `Tu reporte "${reporte.titulo}" fue resuelto.`;
-  const permiso = await Notifications.getPermissionsAsync();
+  const simulado = obtenerPermisoSimulado('notificaciones');
+  const tienePermiso = simulado
+    ? simulado === 'concedido'
+    : (await Notifications.getPermissionsAsync()).granted;
 
-  if (permiso.granted && obtenerPreferenciaNotificaciones()) {
+  if (tienePermiso && obtenerPreferenciaNotificaciones()) {
+    if (Platform.OS === 'web') {
+      if (
+        typeof window !== 'undefined' &&
+        'Notification' in window &&
+        window.Notification.permission === 'granted'
+      ) {
+        setTimeout(() => {
+          try {
+            new window.Notification('Reporte resuelto', { body: mensaje });
+          } catch {
+            agregarAviso(reporte.id, mensaje);
+          }
+        }, 10_000);
+        return 'notificacion';
+      }
+      agregarAviso(reporte.id, mensaje);
+      return 'bandeja';
+    }
+
     await crearCanalReportes();
     await Notifications.scheduleNotificationAsync({
       content: { title: 'Reporte resuelto', body: mensaje },

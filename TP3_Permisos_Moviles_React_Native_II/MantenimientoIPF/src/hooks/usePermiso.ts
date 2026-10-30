@@ -1,6 +1,6 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { AppState, Linking } from 'react-native';
+import { AppState, Linking, Platform } from 'react-native';
 
 import {
   consultarPermiso,
@@ -79,7 +79,17 @@ export function usePermiso(recurso: RecursoPermiso): ResultadoPermiso {
     return resultado.estado;
   }, [recurso]);
 
-  const abrirAjustes = useCallback(() => Linking.openSettings(), []);
+  const abrirAjustes = useCallback(async () => {
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined') {
+        window.alert(
+          'En el navegador, podés cambiar los permisos desde el ícono de configuración del sitio junto a la barra de direcciones.',
+        );
+      }
+      return;
+    }
+    await Linking.openSettings();
+  }, []);
 
   return {
     estado: info.estado,

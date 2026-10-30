@@ -3,6 +3,7 @@ import { useState } from 'react';
 import {
   Alert,
   Image,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -56,31 +57,47 @@ export default function PantallaDetalleReporte() {
 
   const simularResolucion = async () => {
     if (reporte.estado === 'resuelto') {
-      Alert.alert('Ya resuelto', 'Este reporte ya fue marcado como resuelto.');
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        window.alert('Este reporte ya fue marcado como resuelto.');
+      } else {
+        Alert.alert('Ya resuelto', 'Este reporte ya fue marcado como resuelto.');
+      }
       return;
     }
 
     setSimulando(true);
 
-    const actualizado = resolverReporte(reporte.id);
-    if (actualizado) setReporte(actualizado);
+    try {
+      const actualizado = resolverReporte(reporte.id);
+      if (actualizado) setReporte(actualizado);
 
-    const destino = await avisarResolucion(actualizado ?? reporte);
+      const destino = await avisarResolucion(actualizado ?? reporte);
 
-    if (destino === 'notificacion') {
-      Alert.alert(
-        'Resolución simulada',
-        'Recibirás una notificación en ~10 segundos.',
-      );
-    } else {
-      Alert.alert(
-        'Resolución simulada',
-        'El aviso aparecerá en la bandeja de Avisos (sin permiso o con notificaciones desactivadas).',
-        [{ text: 'Ver avisos', onPress: () => router.push('/avisos') }],
-      );
+      if (destino === 'notificacion') {
+        if (Platform.OS === 'web' && typeof window !== 'undefined') {
+          window.alert('Resolución simulada: recibirás una notificación en ~10 segundos.');
+        } else {
+          Alert.alert(
+            'Resolución simulada',
+            'Recibirás una notificación en ~10 segundos.',
+          );
+        }
+      } else {
+        const detalle =
+          'El aviso aparecerá en la bandeja de Avisos (sin permiso o con notificaciones desactivadas).';
+        if (Platform.OS === 'web' && typeof window !== 'undefined') {
+          if (window.confirm(`Resolución simulada\n\n${detalle}\n\n¿Ir a Avisos?`)) {
+            router.push('/avisos');
+          }
+        } else {
+          Alert.alert('Resolución simulada', detalle, [
+            { text: 'Ver avisos', onPress: () => router.push('/avisos') },
+          ]);
+        }
+      }
+    } finally {
+      setSimulando(false);
     }
-
-    setSimulando(false);
   };
 
   const fechaCreacion = new Date(reporte.creadoEn).toLocaleDateString(
